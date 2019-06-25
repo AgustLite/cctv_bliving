@@ -69,7 +69,7 @@ UIView *_view;
 - (void)handleMethodCall:(FlutterMethodCall *)call result:(FlutterResult)result{
     _result = result;
     NSString* _methodName = call.method;
-    if ([_methodName isEqualToString:@"playVideo"]){
+    if ([_methodName isEqualToString:@"initialize"]){
         NSString *_url = call.arguments[@"url"];
         _player = [[VLCMediaPlayer alloc] init];
         VLCMedia *_media = [VLCMedia mediaWithURL:[NSURL URLWithString:_url]];
@@ -79,8 +79,21 @@ UIView *_view;
         [_player setDrawable: _videoView];
         [_player addObserver:self forKeyPath:@"state" options:NSKeyValueObservingOptionNew context:nil];
         [_player play];
+
     } else if ([_methodName isEqualToString:@"dispose"]){
         [_player stop];
+
+    } else if ([_methodName isEqualToString:@"setPlaybackState"]){
+
+        NSString *playbackState = call.arguments[@"playbackState"];
+        if([playbackState isEqualToString:@"play"]){
+            [_player play];
+        }else if([playbackState isEqualToString:@"pause"]){
+            [_player pause];
+        }else if([playbackState isEqualToString:@"stop"]){
+            [_player stop];
+        }
+
     }else if ([_methodName isEqualToString:@"getSnapshot"]){
         UIView *_drawable = _player.drawable;
         CGSize _size = _drawable.frame.size;
