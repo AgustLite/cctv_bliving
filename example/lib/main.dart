@@ -100,6 +100,15 @@ class _MyAppState extends State<MyApp> {
 
             FlatButton(
               onPressed: () {
+                _videoViewController.pause();
+                // if(_videoViewController.buffering == true) print("Hello");
+                // else print(_videoViewController.playing);
+              },
+              child: Text("Pause"),
+            ),
+
+            FlatButton(
+              onPressed: () {
                 if (!_videoViewController.playing) _videoViewController.play();
               },
               child: Text("Play"),
