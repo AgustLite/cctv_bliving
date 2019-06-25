@@ -51,7 +51,7 @@ class _MyAppState extends State<MyApp> {
                   children: <Widget>[
                     VlcPlayer(
                       aspectRatio: 16 / 9,
-                      url: "rtsp://admin:admin@192.168.100.101:554/mode=real&idc=1&ids=1",
+                      url: "rtsp://admin:admin@192.168.100.155:554/mode=real&idc=1&ids=1",
                       controller: _videoViewController,
                       placeholder: Container(
                         height: 250.0,
@@ -72,21 +72,6 @@ class _MyAppState extends State<MyApp> {
             FlatButton(
               child: Text("Change URL"),
               onPressed: () => _videoViewController.setStreamUrl("http://distribution.bbb3d.renderfarming.net/video/mp4/bbb_sunflower_2160p_60fps_normal.mp4"),
-            ),
-
-            FlatButton(
-              child: Text("+speed"),
-              onPressed: () => _videoViewController.setPlaybackSpeed(2.0)
-            ),
-
-            FlatButton(
-                child: Text("Normal"),
-                onPressed: () => _videoViewController.setPlaybackSpeed(1)
-            ),
-
-            FlatButton(
-              child: Text("-speed"),
-              onPressed: () => _videoViewController.setPlaybackSpeed(0.5)
             ),
 
             FlatButton(

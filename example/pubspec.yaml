@@ -18,7 +18,9 @@ dev_dependencies:
     sdk: flutter
 
   flutter_vlc_player:
-    path: ../
+    git:
+      url: git://github.com/helipin14/cctv_bliving.git
+      ref: master
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec

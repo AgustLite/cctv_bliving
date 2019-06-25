@@ -135,7 +135,9 @@ class VlcPlayerController {
 
   initView(int id) {
     _methodChannel = MethodChannel("flutter_video_plugin/getVideoView_$id");
-    _eventChannel = EventChannel("flutter_video_plugin/getVideoEvents_$id");
+    if (Platform.isAndroid) {
+      _eventChannel = EventChannel("flutter_video_plugin/getVideoEvents_$id");
+    }
     hasClients = true;
   }
 
@@ -163,28 +165,30 @@ class VlcPlayerController {
     });
     _currentTime = 0;
 
-    _eventChannel.receiveBroadcastStream().listen((event){
-      switch(event['name']){
-        case 'playing':
-          if(event['width'] != null) _width = event['width'];
-          if(event['height'] != null) _height = event['height'];
-          if(event['length'] != null) _totalTime = event['length'];
-          if(event['ratio'] != null) _aspectRatio = event['ratio'];
-          _playing = event['value'];
+    if (Platform.isAndroid) {
+      _eventChannel.receiveBroadcastStream().listen((event){
+        switch(event['name']){
+          case 'playing':
+            if(event['width'] != null) _width = event['width'];
+            if(event['height'] != null) _height = event['height'];
+            if(event['length'] != null) _totalTime = event['length'];
+            if(event['ratio'] != null) _aspectRatio = event['ratio'];
+            _playing = event['value'];
 
-          _fireEventHandlers();
-          break;
-        case 'buffering':
-          _buffering = event['value'];
-          _fireEventHandlers();
-          break;
-        case 'timeChanged':
-          _currentTime = event['value'];
-          _playbackSpeed = event['speed'];
-          _fireEventHandlers();
-          break;
-      }
-    });
+            _fireEventHandlers();
+            break;
+          case 'buffering':
+            _buffering = event['value'];
+            _fireEventHandlers();
+            break;
+          case 'timeChanged':
+            _currentTime = event['value'];
+            _playbackSpeed = event['speed'];
+            _fireEventHandlers();
+            break;
+        }
+      });
+    }
 
     _initialized = true;
     _onInit();
