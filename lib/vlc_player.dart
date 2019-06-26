@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
@@ -26,6 +27,8 @@ class VlcPlayer extends StatefulWidget {
   _VlcPlayerState createState() => _VlcPlayerState();
 }
 
+
+
 class _VlcPlayerState extends State<VlcPlayer> {
   VlcPlayerController _controller;
   int videoRenderId;
@@ -43,21 +46,101 @@ class _VlcPlayerState extends State<VlcPlayer> {
       aspectRatio: widget.aspectRatio,
       child: Stack(
         children: <Widget>[
-          Offstage(offstage: playerInitialized, child: widget.placeholder ?? Container()),
-          Offstage(
-            offstage: !playerInitialized,
-            child: _createPlatformView(),
-          ),
+//          Offstage(offstage: playerInitialized, child: widget.placeholder ?? Container()),
+//          Offstage(
+//            offstage: !playerInitialized,
+//            child: Stack(
+//                    children: <Widget>[
+//                      Text("cek test"),
+//                      _createPlatformView(),
+//                    ],
+//            ),
+//          ),
+//         _createPlatformView(),
+          Text("cek test:")
         ],
+      ),
+    );
+  }
+  Widget _buildController() {
+    return Opacity(
+      opacity: 0.6,
+      child: Material(
+        color: Colors.black,
+        child: Container(
+          // width: MediaQuery.of(context).size.width,
+          padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Text("cek test"),
+              UiKitView(
+                  viewType: "flutter_video_plugin/getVideoView",
+                  onPlatformViewCreated: _onPlatformViewCreated),
+              IconButton(
+                color: Colors.white,
+                iconSize: 15,
+                icon: _controller._playing ? Icon(Icons.pause) : Icon(Icons.play_arrow),
+                onPressed: () {
+                  _controller._playing ? _controller.pause() : _controller.play();
+                },
+              ),
+              IconButton(
+                color: Colors.white,
+                iconSize: 15,
+                icon: Icon(Icons.fullscreen),
+                onPressed: () {
+
+                },
+              )
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _createPlatformView() {
     if (Platform.isIOS) {
-      return UiKitView(
-          viewType: "flutter_video_plugin/getVideoView",
-          onPlatformViewCreated: _onPlatformViewCreated);
+      return Opacity(
+        opacity: 0.6,
+        child: Material(
+          color: Colors.black,
+          child: Container(
+            // width: MediaQuery.of(context).size.width,
+            padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Text("test cek:"),
+                UiKitView(
+                    viewType: "flutter_video_plugin/getVideoView",
+                    onPlatformViewCreated: _onPlatformViewCreated),
+                IconButton(
+                  color: Colors.white,
+                  iconSize: 15,
+                  icon: _controller._playing ? Icon(Icons.pause) : Icon(Icons.play_arrow),
+                  onPressed: () {
+                    _controller._playing ? _controller.pause() : _controller.play();
+                  },
+                ),
+                IconButton(
+                  color: Colors.white,
+                  iconSize: 15,
+                  icon: Icon(Icons.fullscreen),
+                  onPressed: () {
+
+                  },
+                )
+              ],
+            ),
+          ),
+        ),
+      );
     } else if (Platform.isAndroid) {
       return AndroidView(
           viewType: "flutter_video_plugin/getVideoView",
@@ -159,7 +242,7 @@ class VlcPlayerController {
 
   Future<void> _initialize(String url) async {
     if(initialized) throw new Exception("Player already initialized!");
-
+    _playing = true;
     await _methodChannel.invokeMethod("initialize", {
       'url': url
     });
@@ -193,6 +276,7 @@ class VlcPlayerController {
     _initialized = true;
     _onInit();
     _fireEventHandlers();
+    return _playing.toString();
   }
 
   Future<void> setStreamUrl(String url) async {
@@ -214,15 +298,21 @@ class VlcPlayerController {
   }
 
   Future<void> pause() async {
+    _playing = false;
+    print("cek state playing: "+ _playing.toString() );
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'pause'
     });
+    return _playing.toString();
   }
 
   Future<void> stop() async {
+    _playing = false;
+    print("cek state playing: "+ _playing.toString() );
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'stop'
     });
+    return _playing.toString();
   }
 
   Future<void> seek(num time) async {

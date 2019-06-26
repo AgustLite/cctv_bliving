@@ -51,7 +51,7 @@ class _MyAppState extends State<MyApp> {
                   children: <Widget>[
                     VlcPlayer(
                       aspectRatio: 16 / 9,
-                      url: "rtsp://admin:admin@192.168.100.155:554/mode=real&idc=1&ids=1",
+                      url: "rtsp://admin:admin@192.168.100.57:554/mode=real&idc=1&ids=1",
                       controller: _videoViewController,
                       placeholder: Container(
                         height: 250.0,
@@ -61,10 +61,7 @@ class _MyAppState extends State<MyApp> {
                         ),
                       ),
                     ),
-                    Positioned(
-                      bottom: 0,
-                      child: _buildController(_videoViewController),
-                    )                  ],
+                    ],
                 ),
               ),
             ),
@@ -110,42 +107,6 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  _buildController(VlcPlayerController controller) {
-    return Opacity(
-      opacity: 0.6,
-      child: Material(
-        color: Colors.black,
-        child: Container(
-          // width: MediaQuery.of(context).size.width,
-          padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              IconButton(
-                color: Colors.white,
-                iconSize: 15,
-                icon: controller.playing ? Icon(Icons.pause) : Icon(Icons.play_arrow),
-                onPressed: () {
-                  controller.playing ? controller.pause() : controller.play();
-                },
-              ),
-              IconButton(
-                color: Colors.white,
-                iconSize: 15,
-                icon: Icon(Icons.fullscreen),
-                onPressed: () {
-
-                },
-              )
-            ],
-          ),
         ),
       ),
     );
