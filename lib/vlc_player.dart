@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
@@ -26,6 +27,8 @@ class VlcPlayer extends StatefulWidget {
   _VlcPlayerState createState() => _VlcPlayerState();
 }
 
+
+
 class _VlcPlayerState extends State<VlcPlayer> {
   VlcPlayerController _controller;
   int videoRenderId;
@@ -46,9 +49,51 @@ class _VlcPlayerState extends State<VlcPlayer> {
           Offstage(offstage: playerInitialized, child: widget.placeholder ?? Container()),
           Offstage(
             offstage: !playerInitialized,
-            child: _createPlatformView(),
+            child: Stack(
+                    children: <Widget>[
+                      _createPlatformView(),
+//                      _buildController()
+                    ],
+            ),
           ),
+//         _createPlatformView(),
+
         ],
+      ),
+    );
+  }
+  Widget _buildController() {
+    return Opacity(
+      opacity: 0.6,
+      child: Material(
+        color: Colors.black,
+        child: Container(
+          // width: MediaQuery.of(context).size.width,
+          padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              IconButton(
+                color: Colors.white,
+                iconSize: 15,
+                icon: playerInitialized ? Icon(Icons.pause) : Icon(Icons.play_arrow),
+                onPressed: () {
+                  playerInitialized ? _controller.pause() : _controller.play();
+                },
+              ),
+              IconButton(
+                color: Colors.white,
+                iconSize: 15,
+                icon: Icon(Icons.fullscreen),
+                onPressed: () {
+
+                },
+              )
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -109,7 +154,7 @@ class VlcPlayerController {
   bool _buffering = false;
   bool get buffering => _buffering;
 
-  int _currentTime;
+  int _currentTime = 0;
   int get currentTime => _currentTime;
 
   int _totalTime;
@@ -135,7 +180,9 @@ class VlcPlayerController {
 
   initView(int id) {
     _methodChannel = MethodChannel("flutter_video_plugin/getVideoView_$id");
-    _eventChannel = EventChannel("flutter_video_plugin/getVideoEvents_$id");
+    if (Platform.isAndroid) {
+      _eventChannel = EventChannel("flutter_video_plugin/getVideoEvents_$id");
+    }
     hasClients = true;
   }
 
@@ -157,38 +204,41 @@ class VlcPlayerController {
 
   Future<void> _initialize(String url) async {
     if(initialized) throw new Exception("Player already initialized!");
-
+    _playing = true;
     await _methodChannel.invokeMethod("initialize", {
       'url': url
     });
     _currentTime = 0;
 
-    _eventChannel.receiveBroadcastStream().listen((event){
-      switch(event['name']){
-        case 'playing':
-          if(event['width'] != null) _width = event['width'];
-          if(event['height'] != null) _height = event['height'];
-          if(event['length'] != null) _totalTime = event['length'];
-          if(event['ratio'] != null) _aspectRatio = event['ratio'];
-          _playing = event['value'];
+    if (Platform.isAndroid) {
+      _eventChannel.receiveBroadcastStream().listen((event){
+        switch(event['name']){
+          case 'playing':
+            if(event['width'] != null) _width = event['width'];
+            if(event['height'] != null) _height = event['height'];
+            if(event['length'] != null) _totalTime = event['length'];
+            if(event['ratio'] != null) _aspectRatio = event['ratio'];
+            _playing = event['value'];
 
-          _fireEventHandlers();
-          break;
-        case 'buffering':
-          _buffering = event['value'];
-          _fireEventHandlers();
-          break;
-        case 'timeChanged':
-          _currentTime = event['value'];
-          _playbackSpeed = event['speed'];
-          _fireEventHandlers();
-          break;
-      }
-    });
+            _fireEventHandlers();
+            break;
+          case 'buffering':
+            _buffering = event['value'];
+            _fireEventHandlers();
+            break;
+          case 'timeChanged':
+            _currentTime = event['value'];
+            _playbackSpeed = event['speed'];
+            _fireEventHandlers();
+            break;
+        }
+      });
+    }
 
     _initialized = true;
     _onInit();
     _fireEventHandlers();
+    return _playing.toString();
   }
 
   Future<void> setStreamUrl(String url) async {
@@ -210,15 +260,21 @@ class VlcPlayerController {
   }
 
   Future<void> pause() async {
+    _playing = false;
+    print("cek state playing: "+ _playing.toString() );
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'pause'
     });
+
   }
 
   Future<void> stop() async {
+    _playing = false;
+    print("cek state playing: "+ _playing.toString() );
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'stop'
     });
+
   }
 
   Future<void> seek(num time) async {
