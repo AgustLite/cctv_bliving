@@ -46,18 +46,18 @@ class _VlcPlayerState extends State<VlcPlayer> {
       aspectRatio: widget.aspectRatio,
       child: Stack(
         children: <Widget>[
-//          Offstage(offstage: playerInitialized, child: widget.placeholder ?? Container()),
-//          Offstage(
-//            offstage: !playerInitialized,
-//            child: Stack(
-//                    children: <Widget>[
-//                      Text("cek test"),
-//                      _createPlatformView(),
-//                    ],
-//            ),
-//          ),
+          Offstage(offstage: playerInitialized, child: widget.placeholder ?? Container()),
+          Offstage(
+            offstage: !playerInitialized,
+            child: Stack(
+                    children: <Widget>[
+                      _createPlatformView(),
+//                      _buildController()
+                    ],
+            ),
+          ),
 //         _createPlatformView(),
-          Text("cek test:")
+
         ],
       ),
     );
@@ -75,16 +75,12 @@ class _VlcPlayerState extends State<VlcPlayer> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Text("cek test"),
-              UiKitView(
-                  viewType: "flutter_video_plugin/getVideoView",
-                  onPlatformViewCreated: _onPlatformViewCreated),
               IconButton(
                 color: Colors.white,
                 iconSize: 15,
-                icon: _controller._playing ? Icon(Icons.pause) : Icon(Icons.play_arrow),
+                icon: playerInitialized ? Icon(Icons.pause) : Icon(Icons.play_arrow),
                 onPressed: () {
-                  _controller._playing ? _controller.pause() : _controller.play();
+                  playerInitialized ? _controller.pause() : _controller.play();
                 },
               ),
               IconButton(
@@ -104,43 +100,9 @@ class _VlcPlayerState extends State<VlcPlayer> {
 
   Widget _createPlatformView() {
     if (Platform.isIOS) {
-      return Opacity(
-        opacity: 0.6,
-        child: Material(
-          color: Colors.black,
-          child: Container(
-            // width: MediaQuery.of(context).size.width,
-            padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
-            child: Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Text("test cek:"),
-                UiKitView(
-                    viewType: "flutter_video_plugin/getVideoView",
-                    onPlatformViewCreated: _onPlatformViewCreated),
-                IconButton(
-                  color: Colors.white,
-                  iconSize: 15,
-                  icon: _controller._playing ? Icon(Icons.pause) : Icon(Icons.play_arrow),
-                  onPressed: () {
-                    _controller._playing ? _controller.pause() : _controller.play();
-                  },
-                ),
-                IconButton(
-                  color: Colors.white,
-                  iconSize: 15,
-                  icon: Icon(Icons.fullscreen),
-                  onPressed: () {
-
-                  },
-                )
-              ],
-            ),
-          ),
-        ),
-      );
+      return UiKitView(
+          viewType: "flutter_video_plugin/getVideoView",
+          onPlatformViewCreated: _onPlatformViewCreated);
     } else if (Platform.isAndroid) {
       return AndroidView(
           viewType: "flutter_video_plugin/getVideoView",
@@ -192,7 +154,7 @@ class VlcPlayerController {
   bool _buffering = false;
   bool get buffering => _buffering;
 
-  int _currentTime;
+  int _currentTime = 0;
   int get currentTime => _currentTime;
 
   int _totalTime;
@@ -303,7 +265,7 @@ class VlcPlayerController {
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'pause'
     });
-    return _playing.toString();
+
   }
 
   Future<void> stop() async {
@@ -312,7 +274,7 @@ class VlcPlayerController {
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'stop'
     });
-    return _playing.toString();
+
   }
 
   Future<void> seek(num time) async {

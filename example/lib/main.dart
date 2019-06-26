@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_vlc_player/cplayer.dart';
 import 'package:flutter_vlc_player/vlc_player.dart';
-
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
@@ -21,12 +21,12 @@ class _MyAppState extends State<MyApp> {
     imageKey = new GlobalKey();
     _videoViewController = new VlcPlayerController(
       onInit: (){
-        // _videoViewController.play();
+         _videoViewController.play();
       }
     );
-    // _videoViewController.addListener((){
-    //   setState(() {});
-    // });
+     _videoViewController.addListener((){
+       setState(() {});
+     });
 
     super.initState();
   }
@@ -47,7 +47,9 @@ class _MyAppState extends State<MyApp> {
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(10),
-                child: Stack(
+                child:
+                
+                Stack(
                   children: <Widget>[
                     VlcPlayer(
                       aspectRatio: 16 / 9,
@@ -60,16 +62,13 @@ class _MyAppState extends State<MyApp> {
                           children: <Widget>[CircularProgressIndicator()],
                         ),
                       ),
-                    ),
+                    )
                     ],
                 ),
               ),
             ),
 
-            FlatButton(
-              child: Text("Change URL"),
-              onPressed: () => _videoViewController.setStreamUrl("http://distribution.bbb3d.renderfarming.net/video/mp4/bbb_sunflower_2160p_60fps_normal.mp4"),
-            ),
+            FirstRoute(),
 
             FlatButton(
               onPressed: () {
@@ -96,8 +95,8 @@ class _MyAppState extends State<MyApp> {
               child: Text("Play"),
             ),
 
-            Text("current=" + _videoViewController.currentTime.toString() + ", max=" + _videoViewController.totalTime.toString() + ", speed=" + _videoViewController.playbackSpeed.toString()),
-            Text("ratio=" + _videoViewController.aspectRatio.toString()),
+//            Text("current=" + _videoViewController.currentTime.toString() + ", max=" + _videoViewController.totalTime.toString() + ", speed=" + _videoViewController.playbackSpeed.toString()),
+//            Text("ratio=" + _videoViewController.aspectRatio.toString()),
 
             Expanded(
               child: image == null
@@ -117,5 +116,24 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       image = file;
     });
+  }
+}
+class FirstRoute extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+        child: FlatButton(
+          child: Text('Open route'),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CPlayer(
+                title: "rtsp vid",
+                  url: "rtsp://admin:admin@192.168.100.57:554/mode=real&idc=1&ids=1"
+              )),
+            );
+          },
+        ),
+      );
   }
 }
