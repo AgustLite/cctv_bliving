@@ -9,8 +9,11 @@ import 'package:flutter/rendering.dart';
 import 'package:cryptoutils/cryptoutils.dart';
 import 'package:flutter/services.dart';
 
+import 'cplayer.dart';
+
 class VlcPlayer extends StatefulWidget {
   final double aspectRatio;
+  final String title;
   final String url;
   final Widget placeholder;
   final VlcPlayerController controller;
@@ -20,6 +23,7 @@ class VlcPlayer extends StatefulWidget {
     @required this.controller,
     @required this.aspectRatio,
     @required this.url,
+    this.title,
     this.placeholder,
   });
 
@@ -27,7 +31,7 @@ class VlcPlayer extends StatefulWidget {
   _VlcPlayerState createState() => _VlcPlayerState();
 }
 
-
+bool _splaying = false;
 
 class _VlcPlayerState extends State<VlcPlayer> {
   VlcPlayerController _controller;
@@ -52,7 +56,9 @@ class _VlcPlayerState extends State<VlcPlayer> {
             child: Stack(
                     children: <Widget>[
                       _createPlatformView(),
-//                      _buildController()
+                    Positioned(
+                         bottom: 0,
+                         child: _buildController())
                     ],
             ),
           ),
@@ -64,7 +70,7 @@ class _VlcPlayerState extends State<VlcPlayer> {
   }
   Widget _buildController() {
     return Opacity(
-      opacity: 0.6,
+      opacity: 0.4,
       child: Material(
         color: Colors.black,
         child: Container(
@@ -75,12 +81,13 @@ class _VlcPlayerState extends State<VlcPlayer> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
+
               IconButton(
                 color: Colors.white,
                 iconSize: 15,
-                icon: playerInitialized ? Icon(Icons.pause) : Icon(Icons.play_arrow),
+                icon: _splaying ? Icon(Icons.pause) : Icon(Icons.play_arrow),
                 onPressed: () {
-                  playerInitialized ? _controller.pause() : _controller.play();
+                  _splaying ? _controller.pause() : _controller.play();
                 },
               ),
               IconButton(
@@ -88,7 +95,13 @@ class _VlcPlayerState extends State<VlcPlayer> {
                 iconSize: 15,
                 icon: Icon(Icons.fullscreen),
                 onPressed: () {
-
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CPlayer(
+                        title: widget.title,
+                        url: widget.url
+                    )),
+                  );
                 },
               )
             ],
@@ -234,7 +247,7 @@ class VlcPlayerController {
         }
       });
     }
-
+    _splaying = true;
     _initialized = true;
     _onInit();
     _fireEventHandlers();
@@ -254,13 +267,14 @@ class VlcPlayerController {
   }
 
   Future<void> play() async {
+    _splaying = true;
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'play'
     });
   }
 
   Future<void> pause() async {
-    _playing = false;
+    _splaying = false;
     print("cek state playing: "+ _playing.toString() );
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'pause'
@@ -269,7 +283,7 @@ class VlcPlayerController {
   }
 
   Future<void> stop() async {
-    _playing = false;
+    _splaying = false;
     print("cek state playing: "+ _playing.toString() );
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'stop'
