@@ -53,6 +53,7 @@ class _MyAppState extends State<MyApp> {
                   children: <Widget>[
                     VlcPlayer(
                       aspectRatio: 16 / 9,
+                      title: "rtsp vid",
                       url: "rtsp://admin:admin@192.168.100.57:554/mode=real&idc=1&ids=1",
                       controller: _videoViewController,
                       placeholder: Container(
