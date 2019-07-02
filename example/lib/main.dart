@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_vlc_player/cplayer.dart';
 import 'package:flutter_vlc_player/vlc_player.dart';
+import 'package:flutter_vlc_player/player/players_with_controls.dart';
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
@@ -47,26 +49,12 @@ class _MyAppState extends State<MyApp> {
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(10),
-                child:
-                
-                Stack(
-                  children: <Widget>[
-                    VlcPlayer(
-                      aspectRatio: 16 / 9,
-                      title: "rtsp vid",
-                      url: "rtsp://admin:admin@192.168.100.57:554/mode=real&idc=1&ids=1",
-                      controller: _videoViewController,
-                      placeholder: Container(
-                        height: 250.0,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[CircularProgressIndicator()],
-                        ),
-                      ),
-                    )
-                    ],
-                ),
-              ),
+                child: PlayerWithControls(
+                  aspectRatio: 16 / 9,
+                  title: "rtsp vid",
+                  url: "rtsp://192.168.100.78:554/mode=real&idc=1&ids=1",
+                )
+              )
             ),
 
             FirstRoute(),
@@ -119,6 +107,7 @@ class _MyAppState extends State<MyApp> {
     });
   }
 }
+
 class FirstRoute extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -130,7 +119,7 @@ class FirstRoute extends StatelessWidget {
               context,
               MaterialPageRoute(builder: (context) => CPlayer(
                 title: "rtsp vid",
-                  url: "rtsp://admin:admin@192.168.100.57:554/mode=real&idc=1&ids=1"
+                  url: "rtsp://admin:admin@192.168.100.78:554/mode=real&idc=1&ids=1"
               )),
             );
           },
