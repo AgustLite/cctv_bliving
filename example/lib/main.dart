@@ -21,25 +21,16 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     imageKey = new GlobalKey();
-    _videoViewController = new VlcPlayerController(
-      onInit: (){
-         _videoViewController.play();
-      }
-    );
-     _videoViewController.addListener((){
-       setState(() {});
-     });
-
+    _videoViewController = new VlcPlayerController(onInit: () => _videoViewController.play());
+    _videoViewController.addListener(() => setState(() {}));
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
-      home: new Scaffold(
-        appBar: new AppBar(
-          title: const Text('Plugin example app'),
-        ),
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: const Text('Plugin example app'),),
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.camera),
           onPressed: _createCameraImage,
@@ -52,37 +43,12 @@ class _MyAppState extends State<MyApp> {
                 child: PlayerWithControls(
                   aspectRatio: 16 / 9,
                   title: "rtsp vid",
-                  url: "rtsp://192.168.100.78:554/mode=real&idc=1&ids=1",
+                  url: "rtsp://admin:admin@192.168.100.100:554/mode=real&idc=1&ids=1",
                 )
               )
             ),
 
             FirstRoute(),
-
-            FlatButton(
-              onPressed: () {
-                _videoViewController.stop();
-                // if(_videoViewController.buffering == true) print("Hello");
-                // else print(_videoViewController.playing);
-              },
-              child: Text("Stop"),
-            ),
-
-            FlatButton(
-              onPressed: () {
-                _videoViewController.pause();
-                // if(_videoViewController.buffering == true) print("Hello");
-                // else print(_videoViewController.playing);
-              },
-              child: Text("Pause"),
-            ),
-
-            FlatButton(
-              onPressed: () {
-                if (!_videoViewController.playing) _videoViewController.play();
-              },
-              child: Text("Play"),
-            ),
 
 //            Text("current=" + _videoViewController.currentTime.toString() + ", max=" + _videoViewController.totalTime.toString() + ", speed=" + _videoViewController.playbackSpeed.toString()),
 //            Text("ratio=" + _videoViewController.aspectRatio.toString()),

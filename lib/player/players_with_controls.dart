@@ -5,10 +5,12 @@ import 'controls.dart';
 class PlayerWithControls extends StatefulWidget {
   String url, title;
   double aspectRatio;
+  bool autoPlay;
   PlayerWithControls({
     @required this.url,
     this.title,
-    this.aspectRatio
+    this.aspectRatio,
+    this.autoPlay
   });
   _PlayerWithControls createState() => _PlayerWithControls();
 }
@@ -28,27 +30,33 @@ class _PlayerWithControls extends State<PlayerWithControls> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Stack(
+      child: Column(
         children: <Widget>[
-          VlcPlayer(
-            aspectRatio: widget.aspectRatio ?? _calculateAspectRatio(context),
-            title: widget.url ?? "Video Streaming",
-            url: widget.url,
-            controller: controller,
-          ),
-          Positioned(
-            child: Container(
-              width: MediaQuery.of(context).size.width - 20,
-              child: _buildControls(),
-            ),
-            bottom: 0,
-          )
+          _buildVideoPlayer(),
+          _buildControls()
         ],
       ),
     );
   }
 
-  _buildControls() => controller != null ? PlayerControls(controller) : Container();
+  _buildVideoPlayer() {
+    return Stack(
+      children: <Widget>[
+        VlcPlayer(
+          aspectRatio: widget.aspectRatio ?? _calculateAspectRatio(context),
+          title: widget.url ?? "Video Streaming",
+          url: widget.url,
+          controller: controller,
+        ) ?? Container(width: 0,),
+        SizedBox(height: 10,),
+        _buildProgress() ?? Container(width: 0,)        
+      ],
+    );
+  }
+
+  _buildProgress() => setState(() => controller.sPlaying == false ? CircularProgressIndicator() : Container(width: 0,));
+
+  _buildControls() => controller != null ? PlayerControls(controller, widget.url) : Container();
 
   double _calculateAspectRatio(BuildContext context) {
     final size = MediaQuery.of(context).size;

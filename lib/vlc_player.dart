@@ -58,7 +58,6 @@ class _VlcPlayerState extends State<VlcPlayer> {
             ),
           ),
 //         _createPlatformView(),
-
         ],
       ),
     );
@@ -84,9 +83,7 @@ class _VlcPlayerState extends State<VlcPlayer> {
 
     _controller.addListener((){
       if(playerInitialized != _controller.initialized){
-        setState(() {
-          playerInitialized = _controller.initialized;
-        });
+        setState(() => playerInitialized = _controller.initialized);
       }
     });
 
@@ -188,6 +185,7 @@ class VlcPlayerController {
             break;
           case 'buffering':
             _buffering = event['value'];
+            print("Buffering -> $buffering");
             _fireEventHandlers();
             break;
           case 'timeChanged':
@@ -240,12 +238,17 @@ class VlcPlayerController {
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'stop'
     });
-
   }
 
   Future<void> seek(num time) async {
     await _methodChannel.invokeMethod("seek", {
       'time': time.toString()
+    });
+  }
+
+  Future<void> muteSound(bool muted) async {
+    await _methodChannel.invokeMethod("muteSound", {
+      'muted':muted
     });
   }
 

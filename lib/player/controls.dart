@@ -5,134 +5,68 @@ import 'package:flutter_vlc_player/cplayer.dart';
 
 class PlayerControls extends StatefulWidget {
   VlcPlayerController controller;
-  PlayerControls(this.controller);
+  String url;
+  PlayerControls(this.controller, this.url);
   _PlayerControls createState() => _PlayerControls();
 }
 
 class _PlayerControls extends State<PlayerControls> {
 
-  bool hide = false;
-  Timer _hideTimer;
-  Timer _showTimer;
+  IconData icon;
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      child: Column(
-        children: <Widget>[
-          // _buildVideoPlayer(),
-          _buildHitArea(),
-          _buildBottomBar()
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => _buildBottomBar() ?? Container();
 
-  _buildVideoPlayer() => setState(() => widget.controller.playing ? _buildHitArea() : Center(child: CircularProgressIndicator(),));
+  _buildBottomBar() => Container(
+    color: Colors.transparent,
+    padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+    child: Row(
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        _buildPlayPause(),
+        _buildFullScreen()
+      ],
+    ),
+  );
 
-  _buildHitArea() {
-    return Center(
-      child: GestureDetector(
-        child: Container(
-          color: Colors.transparent,
-          child: AnimatedOpacity(
-            opacity: !widget.controller.sPlaying ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 300),
-            child: GestureDetector(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(48.0),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Icon(Icons.play_arrow, size: 32.0),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  _playPause() => setState(() {
+    if(widget.controller.sPlaying) widget.controller.pause(); 
+    else if(widget.controller.initialized) widget.controller.play();
+    _buildIcon();
+  });
 
-  @override
-  void dispose() {
-    _hideTimer?.cancel();
-    _showTimer?.cancel();
-    super.dispose();
-  }
-
-  _buildBottomBar() {
-    return AnimatedOpacity(
-      opacity: hide ? 0.0 : 1.0,
-      duration: const Duration(milliseconds: 300),
-      child: Opacity(
-        opacity: 0.5,
-        child: Container(
-          color: Colors.black,
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              _buildPlayPause(),
-              _buildFullScreen()
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  _playPause() {
-    setState(() {
-      print(widget.controller.sPlaying);
-      if(widget.controller.sPlaying) {
-        hide = false;
-        _hideTimer?.cancel();
-        widget.controller.pause();
-      } else {
-        hide = true;
-        _cancelAndRestartTimer();
-        if(widget.controller.initialized) widget.controller.play();
-      }
-    });
-  }
-
-  _cancelAndRestartTimer() {
-    _hideTimer?.cancel();
-    _startHideTimer();
-
-    setState(() => hide = false);
-  }
-
-  _startHideTimer() {
-    _hideTimer = Timer(
-      const Duration(seconds: 3),
-      () => setState(() => hide = true)
-    );
-  }
-
-  _buildIcon() => widget.controller.sPlaying ? Icon(Icons.pause, color: Colors.white,) : Icon(Icons.play_arrow, color: Colors.white,);
+  _buildIcon() => widget.controller.sPlaying == true ? icon = Icons.pause : icon = Icons.play_arrow;
 
   _buildPlayPause() {
-    print(widget.controller.sPlaying);
-    return GestureDetector(
-      onTap: _playPause,
-      child: _buildIcon(),
+    print("Playing : ${widget.controller.sPlaying}");
+    return IconButton(
+      onPressed: _playPause,
+      icon: Icon(icon, color: Colors.blueAccent,),
+      color: Colors.blueAccent,
     );
   }
 
-  _buildFullScreen() {
-    return GestureDetector(
-      onTap: _fullscreen,
-      child: Icon(Icons.fullscreen, color: Colors.white,),
-    );
-  }
+  _buildSoundController() => IconButton(
+    icon: Icon(Icons.volume_up, color: Colors.blueAccent,),
+    onPressed: () {
+      
+    },
+    iconSize: 17,
+  );
+
+  _buildFullScreen() => IconButton(
+    onPressed: _fullscreen,
+    icon: Icon(Icons.fullscreen, color: Colors.blueAccent,),
+    color: Colors.blueAccent,
+  );
 
   _fullscreen() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => CPlayer(
-      
+    final result = Navigator.push(context, MaterialPageRoute(builder: (context) => CPlayer(
+      url: widget.url ?? "",
+      title: "CCTV Streaming",
     )));
+    if(result != null) print("Result from cplayer : $result");
+    if(widget.controller != null && widget.controller.sPlaying) widget.controller.pause(); 
   }
 }
