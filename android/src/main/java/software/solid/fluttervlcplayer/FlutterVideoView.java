@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.net.Uri;
 import android.util.Base64;
+import android.util.Log;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -130,9 +131,7 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
     public void onMethodCall(MethodCall methodCall, MethodChannel.Result result) {
         switch (methodCall.method) {
             case "initialize":
-                if (textureView == null) {
-                    textureView = new TextureView(context);
-                }
+                if (textureView == null) textureView = new TextureView(context);
                 String initStreamURL = methodCall.argument("url");
 
                 ArrayList<String> options = new ArrayList<>();
@@ -140,10 +139,7 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
                 options.add("--no-skip-frames");
                 options.add("--rtsp-tcp");
 
-                if(DISABLE_LOG_OUTPUT) {
-                    // Silence player log output.
-                    options.add("--quiet");
-                }
+                if(DISABLE_LOG_OUTPUT) options.add("--quiet");
 
                 libVLC = new LibVLC(context, options);
                 Media media = new Media(libVLC, Uri.parse(Uri.decode(initStreamURL)));
@@ -215,10 +211,18 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
                 break;
 
             case "seek":
-
                 long time = Long.parseLong((String) methodCall.argument("time"));
                 mediaPlayer.setTime(time);
-
+                result.success(null);
+                break;
+            case "soundController":
+                double volume = methodCall.argument("volume");
+                if(mediaPlayer != null) {
+                    Log.e("SoundController", "Volume -> " + String.valueOf(volume));
+                    volume = volume * 100;
+                    mediaPlayer.setVolume((int)volume);
+                } 
+                else return;
                 result.success(null);
                 break;
         }
@@ -256,6 +260,7 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
                 break;
 
             case MediaPlayer.Event.EndReached:
+                Log.e("EndReached", "Endreached on playing streaming");
                 mediaPlayer.stop();
                 eventObject.put("name", "ended");
                 eventSink.success(eventObject);
@@ -301,6 +306,7 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
 
             case MediaPlayer.Event.EncounteredError:
                 // TODO: Send error information
+                Log.e("Error", "Error on playing streaming");
                 eventObject.put("name", "buffering");
                 eventObject.put("value", true);
                 eventSink.success(eventObject);
@@ -310,6 +316,7 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
                 eventObject.put("name", "playing");
                 eventObject.put("value", false);
                 eventSink.success(eventObject);
+
                 break;
         }
     }

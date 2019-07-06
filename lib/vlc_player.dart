@@ -246,9 +246,10 @@ class VlcPlayerController {
     });
   }
 
-  Future<void> muteSound(bool muted) async {
-    await _methodChannel.invokeMethod("muteSound", {
-      'muted':muted
+  Future<void> soundController(double volume) async {
+    print("Volume : $volume");
+    await _methodChannel.invokeMethod("soundController", {
+      'volume':volume
     });
   }
 

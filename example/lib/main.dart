@@ -17,6 +17,7 @@ class _MyAppState extends State<MyApp> {
   GlobalKey imageKey;
   VlcPlayer videoView;
   VlcPlayerController _videoViewController;
+  double value = 1;
 
   @override
   void initState() {
@@ -37,22 +38,11 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Column(
           children: <Widget>[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: PlayerWithControls(
-                  aspectRatio: 16 / 9,
-                  title: "rtsp vid",
-                  url: "rtsp://admin:admin@192.168.100.100:554/mode=real&idc=1&ids=1",
-                )
-              )
+           PlayerWithControls(
+              aspectRatio: 16 / 9,
+              title: "rtsp vid",
+              url: "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov",
             ),
-
-            FirstRoute(),
-
-//            Text("current=" + _videoViewController.currentTime.toString() + ", max=" + _videoViewController.totalTime.toString() + ", speed=" + _videoViewController.playbackSpeed.toString()),
-//            Text("ratio=" + _videoViewController.aspectRatio.toString()),
-
             Expanded(
               child: image == null
                   ? Container()

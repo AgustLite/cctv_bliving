@@ -30,11 +30,16 @@ class _PlayerWithControls extends State<PlayerWithControls> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        children: <Widget>[
-          _buildVideoPlayer(),
-          _buildControls()
-        ],
+      child: Card(
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+          children: <Widget>[
+            _buildVideoPlayer(),
+            _buildControls()
+          ],
+        ),
+        )
       ),
     );
   }
@@ -49,7 +54,7 @@ class _PlayerWithControls extends State<PlayerWithControls> {
           controller: controller,
         ) ?? Container(width: 0,),
         SizedBox(height: 10,),
-        _buildProgress() ?? Container(width: 0,)        
+        _buildProgress() ?? Container(width: 0,)      
       ],
     );
   }

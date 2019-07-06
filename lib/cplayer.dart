@@ -626,7 +626,7 @@ class CPlayerState extends State<CPlayer> {
               // Buffering loader
               IgnorePointer(
                 child: AnimatedOpacity(
-                  opacity: (_controller.buffering || _controller == null || !_controller.initialized) && _interruptWidget == null ? 1.0 : 0.0,
+                  opacity: (_controller.buffering || _controller == null || !_controller.initialized) ? 1.0 : 0.0,
                   duration: Duration(milliseconds: 200),
                   child: LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints){
                     return Container(child: Center(

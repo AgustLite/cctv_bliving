@@ -12,10 +12,18 @@ class PlayerControls extends StatefulWidget {
 
 class _PlayerControls extends State<PlayerControls> {
 
-  IconData icon;
+  IconData icon, sound;
+  double volume = 1.0;
 
   @override
   Widget build(BuildContext context) => _buildBottomBar() ?? Container();
+
+  @override
+  void initState() {
+    icon = Icons.pause;
+    sound = Icons.volume_up;
+    super.initState();
+  }
 
   _buildBottomBar() => Container(
     color: Colors.transparent,
@@ -25,7 +33,16 @@ class _PlayerControls extends State<PlayerControls> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         _buildPlayPause(),
-        _buildFullScreen()
+        Container(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              _buildSoundController(),
+              _buildFullScreen()
+            ],
+          ),
+        )
       ],
     ),
   );
@@ -47,13 +64,26 @@ class _PlayerControls extends State<PlayerControls> {
     );
   }
 
-  _buildSoundController() => IconButton(
-    icon: Icon(Icons.volume_up, color: Colors.blueAccent,),
-    onPressed: () {
-      
-    },
-    iconSize: 17,
-  );
+  _buildSoundController() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(Icons.volume_up, color: Colors.blueAccent, size: 18,),
+        Container(
+          width: 100,
+          child: Slider(
+            onChanged: (value) => setState(() {
+              volume = value;
+              widget.controller.soundController(value);
+            }),
+            min: 0,
+            max: 1,
+            value: volume,
+          ),
+        )
+      ],
+    );
+  }
 
   _buildFullScreen() => IconButton(
     onPressed: _fullscreen,
@@ -67,6 +97,6 @@ class _PlayerControls extends State<PlayerControls> {
       title: "CCTV Streaming",
     )));
     if(result != null) print("Result from cplayer : $result");
-    if(widget.controller != null && widget.controller.sPlaying) widget.controller.pause(); 
+    if(widget.controller != null && widget.controller.sPlaying) widget.controller.pause();
   }
 }
