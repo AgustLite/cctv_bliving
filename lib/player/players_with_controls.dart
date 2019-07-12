@@ -33,15 +33,37 @@ class _PlayerWithControls extends State<PlayerWithControls> {
       child: Card(
         child: Container(
           padding: const EdgeInsets.all(10),
-          child: Column(
-          children: <Widget>[
-            _buildVideoPlayer(),
-            _buildControls()
-          ],
-        ),
+          child: Stack(
+            children: <Widget>[
+              _buildErrorPlayer(),
+              Container(
+                child: Column(
+                  children: <Widget>[
+                    _buildVideoPlayer(),
+                    _buildControls()
+                  ],
+                ),
+              )
+            ],
+          ),
         )
       ),
     );
+  }
+
+  _buildErrorPlayer() {
+    return !controller.initialized ? Container(
+      child: Row(
+        children: <Widget>[
+          Icon(Icons.info, size: 20, color: Colors.white,),
+          Text("Error playing stream!", style: TextStyle(
+            fontFamily: "Helvetica",
+            fontSize: 20,
+            color: Colors.white
+          )),
+        ],
+      ),
+    ) : Container();
   }
 
   _buildVideoPlayer() {

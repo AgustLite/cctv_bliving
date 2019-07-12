@@ -153,6 +153,7 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
 
                 mediaPlayer.setEventListener(this);
                 mediaPlayer.setMedia(media);
+                mediaPlayer.setVolume(0);
                 mediaPlayer.play();
                 result.success(null);
                 break;

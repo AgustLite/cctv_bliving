@@ -229,7 +229,6 @@ class VlcPlayerController {
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'pause'
     });
-
   }
 
   Future<void> stop() async {
