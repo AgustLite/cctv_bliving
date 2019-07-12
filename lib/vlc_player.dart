@@ -31,8 +31,6 @@ class VlcPlayer extends StatefulWidget {
   _VlcPlayerState createState() => _VlcPlayerState();
 }
 
-bool _splaying = false;
-
 class _VlcPlayerState extends State<VlcPlayer> {
   VlcPlayerController _controller;
   int videoRenderId;
@@ -56,57 +54,11 @@ class _VlcPlayerState extends State<VlcPlayer> {
             child: Stack(
                     children: <Widget>[
                       _createPlatformView(),
-                    Positioned(
-                         bottom: 0,
-                         child: _buildController())
-                    ],
+               ],
             ),
           ),
 //         _createPlatformView(),
-
         ],
-      ),
-    );
-  }
-  Widget _buildController() {
-    return Opacity(
-      opacity: 0.4,
-      child: Material(
-        color: Colors.black,
-        child: Container(
-          // width: MediaQuery.of(context).size.width,
-          padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-
-              IconButton(
-                color: Colors.white,
-                iconSize: 15,
-                icon: _splaying ? Icon(Icons.pause) : Icon(Icons.play_arrow),
-                onPressed: () {
-                  _splaying ? _controller.pause() : _controller.play();
-                },
-              ),
-              IconButton(
-                color: Colors.white,
-                iconSize: 15,
-                icon: Icon(Icons.fullscreen),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CPlayer(
-                        title: widget.title,
-                        url: widget.url
-                    )),
-                  );
-                },
-              )
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -131,9 +83,7 @@ class _VlcPlayerState extends State<VlcPlayer> {
 
     _controller.addListener((){
       if(playerInitialized != _controller.initialized){
-        setState(() {
-          playerInitialized = _controller.initialized;
-        });
+        setState(() => playerInitialized = _controller.initialized);
       }
     });
 
@@ -157,6 +107,11 @@ class VlcPlayerController {
   bool hasClients = false;
 
   List<Function> _eventHandlers;
+
+  bool _splaying = false;
+
+  
+  bool get sPlaying => _splaying;
 
   bool _initialized = false;
   bool get initialized => _initialized;
@@ -199,17 +154,11 @@ class VlcPlayerController {
     hasClients = true;
   }
 
-  void addListener(Function listener){
-    _eventHandlers.add(listener);
-  }
+  void addListener(Function listener) => _eventHandlers.add(listener);
 
-  void removeListener(Function listener){
-    _eventHandlers.remove(listener);
-  }
+  void removeListener(Function listener) => _eventHandlers.remove(listener);
 
-  void clearListeners(){
-    _eventHandlers.clear();
-  }
+  void clearListeners() => _eventHandlers.clear();
 
   void _fireEventHandlers(){
     for(var handler in _eventHandlers) handler();
@@ -232,11 +181,11 @@ class VlcPlayerController {
             if(event['length'] != null) _totalTime = event['length'];
             if(event['ratio'] != null) _aspectRatio = event['ratio'];
             _playing = event['value'];
-
             _fireEventHandlers();
             break;
           case 'buffering':
             _buffering = event['value'];
+            print("Buffering -> $buffering");
             _fireEventHandlers();
             break;
           case 'timeChanged':
@@ -268,6 +217,7 @@ class VlcPlayerController {
 
   Future<void> play() async {
     _splaying = true;
+    print("playing : $_splaying");
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'play'
     });
@@ -275,7 +225,7 @@ class VlcPlayerController {
 
   Future<void> pause() async {
     _splaying = false;
-    print("cek state playing: "+ _playing.toString() );
+    print("cek state playing: $sPlaying");
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'pause'
     });
@@ -284,16 +234,22 @@ class VlcPlayerController {
 
   Future<void> stop() async {
     _splaying = false;
-    print("cek state playing: "+ _playing.toString() );
+    print("cek state playing: $_splaying");
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'stop'
     });
-
   }
 
   Future<void> seek(num time) async {
     await _methodChannel.invokeMethod("seek", {
       'time': time.toString()
+    });
+  }
+
+  Future<void> soundController(double volume) async {
+    print("Volume : $volume");
+    await _methodChannel.invokeMethod("soundController", {
+      'volume':volume
     });
   }
 
