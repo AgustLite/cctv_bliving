@@ -218,6 +218,7 @@ class VlcPlayerController {
   Future<void> _initialize(String url) async {
     if(initialized) throw new Exception("Player already initialized!");
     _playing = true;
+
     await _methodChannel.invokeMethod("initialize", {
       'url': url
     });
