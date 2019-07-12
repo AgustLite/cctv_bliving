@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_vlc_player/cplayer.dart';
 import 'package:flutter_vlc_player/vlc_player.dart';
+import 'package:flutter_vlc_player/player/players_with_controls.dart';
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
@@ -15,90 +17,32 @@ class _MyAppState extends State<MyApp> {
   GlobalKey imageKey;
   VlcPlayer videoView;
   VlcPlayerController _videoViewController;
+  double value = 1;
 
   @override
   void initState() {
     imageKey = new GlobalKey();
-    _videoViewController = new VlcPlayerController(
-      onInit: (){
-         _videoViewController.play();
-      }
-    );
-     _videoViewController.addListener((){
-       setState(() {});
-     });
-
+    _videoViewController = new VlcPlayerController(onInit: () => _videoViewController.play());
+    _videoViewController.addListener(() => setState(() {}));
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
-      home: new Scaffold(
-        appBar: new AppBar(
-          title: const Text('Plugin example app'),
-        ),
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: const Text('Plugin example app'),),
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.camera),
           onPressed: _createCameraImage,
         ),
         body: Column(
           children: <Widget>[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child:
-                
-                Stack(
-                  children: <Widget>[
-                    VlcPlayer(
-                      aspectRatio: 16 / 9,
-                      title: "rtsp vid",
-                      url: "rtsp://admin:admin@192.168.100.57:554/mode=real&idc=1&ids=1",
-                      controller: _videoViewController,
-                      placeholder: Container(
-                        height: 250.0,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[CircularProgressIndicator()],
-                        ),
-                      ),
-                    )
-                    ],
-                ),
-              ),
+           PlayerWithControls(
+              aspectRatio: 16 / 9,
+              title: "rtsp vid",
+              url: "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov",
             ),
-
-            FirstRoute(),
-
-            FlatButton(
-              onPressed: () {
-                _videoViewController.stop();
-                // if(_videoViewController.buffering == true) print("Hello");
-                // else print(_videoViewController.playing);
-              },
-              child: Text("Stop"),
-            ),
-
-            FlatButton(
-              onPressed: () {
-                _videoViewController.pause();
-                // if(_videoViewController.buffering == true) print("Hello");
-                // else print(_videoViewController.playing);
-              },
-              child: Text("Pause"),
-            ),
-
-            FlatButton(
-              onPressed: () {
-                if (!_videoViewController.playing) _videoViewController.play();
-              },
-              child: Text("Play"),
-            ),
-
-//            Text("current=" + _videoViewController.currentTime.toString() + ", max=" + _videoViewController.totalTime.toString() + ", speed=" + _videoViewController.playbackSpeed.toString()),
-//            Text("ratio=" + _videoViewController.aspectRatio.toString()),
-
             Expanded(
               child: image == null
                   ? Container()
@@ -119,6 +63,7 @@ class _MyAppState extends State<MyApp> {
     });
   }
 }
+
 class FirstRoute extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -130,7 +75,7 @@ class FirstRoute extends StatelessWidget {
               context,
               MaterialPageRoute(builder: (context) => CPlayer(
                 title: "rtsp vid",
-                  url: "rtsp://admin:admin@192.168.100.57:554/mode=real&idc=1&ids=1"
+                  url: "rtsp://admin:admin@192.168.100.78:554/mode=real&idc=1&ids=1"
               )),
             );
           },
