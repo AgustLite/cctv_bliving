@@ -22,7 +22,10 @@ class _PlayerWithControls extends State<PlayerWithControls> {
   @override
   void initState() {
     controller = VlcPlayerController(
-      onInit: () => controller.play()
+      onInit: () {
+        controller?.play();
+        controller?.muteSound();
+      }
     );
     super.initState();
   }

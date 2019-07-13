@@ -45,7 +45,7 @@ class _MyAppState extends State<MyApp> {
            PlayerWithControls(
               aspectRatio: 16 / 9,
               title: "RTSP Video Streaming",
-              url: "rtsp://admin:admin@192.168.100.67:554/mode=real&idc=1&ids=1",
+              url: "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov",
             ),
             Expanded(
               child: image == null
@@ -67,9 +67,7 @@ class _MyAppState extends State<MyApp> {
 
   void _createCameraImage() async {
     Uint8List file = await _videoViewController.makeSnapshot();
-    setState(() {
-      image = file;
-    });
+    setState(() => image = file);
   }
 }
 

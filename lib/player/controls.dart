@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_vlc_player/vlc_player.dart';
 import 'package:flutter_vlc_player/cplayer.dart';
 
@@ -10,7 +10,7 @@ class PlayerControls extends StatefulWidget {
   _PlayerControls createState() => _PlayerControls();
 }
 
-class _PlayerControls extends State<PlayerControls> {
+class _PlayerControls extends State<PlayerControls> with WidgetsBindingObserver {
 
   IconData icon, sound;
   double volume = 0;
@@ -23,6 +23,21 @@ class _PlayerControls extends State<PlayerControls> {
     icon = Icons.pause;
     sound = Icons.volume_up;
     super.initState();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch(state) {
+      case AppLifecycleState.inactive:
+        break;
+      case AppLifecycleState.paused:
+        break;
+      case AppLifecycleState.suspending:
+        break;
+      case AppLifecycleState.resumed:
+        print("Application resumed");
+        break;
+    }
   }
 
   _buildBottomBar() => Container(
@@ -75,6 +90,7 @@ class _PlayerControls extends State<PlayerControls> {
           width: 100,
           child: Slider(
             onChanged: (value) => setState(() {
+              sound = Icons.volume_up;
               volume = value;
               widget.controller.soundController(value);
             }),
@@ -94,11 +110,14 @@ class _PlayerControls extends State<PlayerControls> {
   );
 
   _fullscreen() {
-    final result = Navigator.push(context, MaterialPageRoute(builder: (context) => CPlayer(
+    widget.controller.setFullScreen(true);
+    Navigator.push(context, MaterialPageRoute(builder: (context) => CPlayer(
       url: widget.url ?? "",
       title: widget.title ?? "CCTV Streaming",
     )));
-    print("Result from cplayer : $result");
-    if(widget.controller != null && widget.controller.sPlaying) widget.controller.pause();
+    if(widget.controller != null && widget.controller.sPlaying) {
+      widget.controller.pause();
+      _buildIcon();
+    }
   }
 }

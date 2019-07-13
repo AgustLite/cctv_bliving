@@ -12,6 +12,7 @@ import 'package:screen/screen.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_vlc_player/vlc_player.dart';
+import 'package:auto_orientation/auto_orientation.dart';
 
 class CPlayer extends StatefulWidget {
 
@@ -54,6 +55,7 @@ class CPlayerState extends State<CPlayer> {
   int lastValidPosition;
   double opacity = 1.0;
   int _timeDelta = 0;
+  double volume = 1.0;
 
   Function _getCenterPanel = (){
     return Container();
@@ -140,7 +142,7 @@ class CPlayerState extends State<CPlayer> {
         //_total = _controller.value.duration.inMilliseconds;
       }
     )..addListener(_controllerListener);
-
+    _controller.soundController(volume);
     super.initState();
   }
 
@@ -245,7 +247,6 @@ class CPlayerState extends State<CPlayer> {
                                     ),
                                     child: Builder(builder: (BuildContext ctx){
                                       if(MediaQuery.of(ctx).size.width < 500) return Container();
-
                                       return Row(
                                         mainAxisSize: MainAxisSize.max,
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -314,62 +315,33 @@ class CPlayerState extends State<CPlayer> {
                         // Bottom Bar
                         Column(
                           mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: <Widget>[
                             Container(
                                 height: 52.0,
+                                padding: const EdgeInsets.only(right: 10, left: 10),
                                 child: Padding(
                                     padding: EdgeInsets.symmetric(
                                         horizontal: 10.0,
-                                        vertical: 3.0
+                                        vertical: 5.0
                                     ),
                                     child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      mainAxisSize: MainAxisSize.max,
                                       children: <Widget>[
-                                        /* Start Progress Label */
-                                        new Padding(
-                                          padding: EdgeInsets.only(left: 5.0),
-                                          child: new Text(
-                                            lastValidPosition != null && (!_controller.initialized)
-                                              ? formatTimestamp(lastValidPosition)
-                                              : formatTimestamp( 0
-  //                                              _controller.currentTime
-                                              ),
-                                            maxLines: 1,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              letterSpacing: 0.1
-                                            )
-                                          )
-                                        ),
-
-                                        /* Progress Bar */
-                                        // new Expanded(
-                                        //   child: new Padding(
-                                        //     padding: EdgeInsets.symmetric(
-                                        //       horizontal: 5.0
-                                        //     ),
-                                        //     child: IgnorePointer(
-                                        //       ignoring: _controller == null || !_controller.initialized,
-                                        //       child: CPlayerProgress(
-                                        //         _controller,
-                                        //         activeColor: _controller == null || !_controller.initialized || _controller.buffering ? Colors.grey : Theme.of(context).primaryColor,
-                                        //         inactiveColor: Colors.white54,
-                                        //       ),
-                                        //     )
-                                        //   )
-                                        // ),
-
-                                        /* End Progress Label */
-                                        new Padding(
-                                          padding: EdgeInsets.only(right: 5.0),
-                                          child: (_controller == null || !_controller.initialized)
-                                            ? Container()
-                                            : new Text("${formatTimestamp(_controller.totalTime)}",
-                                                maxLines: 1,
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  letterSpacing: 0.1
-                                                )
-                                            )
+                                        Icon(Icons.volume_up, size: 18, color: Colors.white,),
+                                        Container(
+                                          width: 100,
+                                          child: Slider(
+                                            onChanged: (value) => setState(() {
+                                              volume = value;
+                                              _controller.soundController(value);
+                                            }),
+                                            min: 0,
+                                            max: 1,
+                                            value: volume,
+                                            activeColor: Colors.white,
+                                          ),
                                         )
                                       ],
                                     )
@@ -408,61 +380,54 @@ class CPlayerState extends State<CPlayer> {
     );
   }
 
-  _buildPlayPause() => setState(() {
-    print("Controller status : ${_controller.initialized} Buffering -> ${_controller.buffering}");
-    return (_controller != null && _controller.initialized && !_controller.buffering) ? new Container(
-        child: new Material(
-          color: Colors.transparent,
-          clipBehavior: Clip.antiAlias,
+  _buildPlayPause() {
+    return (_controller != null && _controller.initialized) ? new Container(
+      child: new Material(
+        color: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
+        borderRadius: BorderRadius.circular(100),
+        child: new InkWell(
+          highlightColor: const Color(0x05FFFFFF),
           borderRadius: BorderRadius.circular(100),
-          child: new InkWell(
-            highlightColor: const Color(0x05FFFFFF),
-            borderRadius: BorderRadius.circular(100),
-            onTap: () {
-              setState((){
-                if(_controller.playing) {
-                  _controller.pause();
-                }else{
-                  _controller.play();
-                }
-              });
-            },
-            child: new Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Center(
-                child: new Icon(
-                  (_controller != null && _controller.playing ?
-                    Icons.pause :
-                    Icons.play_arrow
-                  ),
-                  size: 72.0,
-                  color: Colors.white,
-                )
+          onTap: () {
+            setState((){
+              if(_controller.sPlaying) _controller.pause();
+              else _controller.play();
+            });
+          },
+          child: new Padding(
+            padding: EdgeInsets.all(10.0),
+            child: Center(
+              child: new Icon(
+                (_controller != null && _controller.sPlaying ?
+                  Icons.pause :
+                  Icons.play_arrow
+                ),
+                size: 72.0,
+                color: Colors.white,
               )
             )
           )
-        ),
-      ) : Container(
-        child: Text("Not initialized or null"),
-      );
-  });
+        )
+      ),
+    ) : Container(
+      child: CircularProgressIndicator(),
+    );
+  }
 
   _orientationHandler(orientation) {
     if (orientation == "portrait") {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown
-      ]);
+      AutoOrientation.portraitUpMode();
+      AutoOrientation.portraitDownMode();
     } else {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight
-      ]);
+      AutoOrientation.landscapeLeftMode();
+      AutoOrientation.landscapeRightMode();
     }
   }
 
   _back() {
-    Navigator.pop(context, 'Hello its me');
+    _controller?.setFullScreen(false);
+    Navigator.pop(context);
     _orientationHandler("portrait");
   }
 
