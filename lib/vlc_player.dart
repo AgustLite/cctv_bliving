@@ -9,7 +9,6 @@ import 'package:flutter/rendering.dart';
 import 'package:cryptoutils/cryptoutils.dart';
 import 'package:flutter/services.dart';
 
-import 'cplayer.dart';
 
 class VlcPlayer extends StatefulWidget {
   final double aspectRatio;
@@ -108,10 +107,14 @@ class VlcPlayerController {
 
   List<Function> _eventHandlers;
 
-  bool _splaying = false;
-
-  
+  bool _splaying = false; 
   bool get sPlaying => _splaying;
+
+  bool _isFullscreen = false;
+  bool get isFullScreen => _isFullscreen;
+
+  bool _error = false;
+  bool get error => _error;
 
   bool _initialized = false;
   bool get initialized => _initialized;
@@ -186,13 +189,16 @@ class VlcPlayerController {
             break;
           case 'buffering':
             _buffering = event['value'];
-            print("Buffering -> $buffering");
+            _buffering = !_buffering;
             _fireEventHandlers();
             break;
           case 'timeChanged':
             _currentTime = event['value'];
             _playbackSpeed = event['speed'];
             _fireEventHandlers();
+            break;
+          case 'pause':
+            _buffering = event['buffering'];
             break;
         }
       });
@@ -230,7 +236,6 @@ class VlcPlayerController {
     await _methodChannel.invokeMethod("setPlaybackState", {
       'playbackState': 'pause'
     });
-
   }
 
   Future<void> stop() async {
@@ -245,6 +250,10 @@ class VlcPlayerController {
     await _methodChannel.invokeMethod("seek", {
       'time': time.toString()
     });
+  }
+
+  Future<void> muteSound() async {
+    await _methodChannel.invokeMethod("muteSound");
   }
 
   Future<void> soundController(double volume) async {
@@ -266,6 +275,8 @@ class VlcPlayerController {
     Uint8List imageBytes = CryptoUtils.base64StringToBytes(base64String);
     return imageBytes;
   }
+
+  void setFullScreen(bool fullscreen) => this._isFullscreen = fullscreen;
 
   void dispose() {
     _methodChannel.invokeMethod("dispose");
