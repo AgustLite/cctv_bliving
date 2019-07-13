@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vlc_player/cplayer.dart';
 import 'package:flutter_vlc_player/vlc_player.dart';
@@ -24,6 +24,10 @@ class _MyAppState extends State<MyApp> {
     imageKey = new GlobalKey();
     _videoViewController = new VlcPlayerController(onInit: () => _videoViewController.play());
     _videoViewController.addListener(() => setState(() {}));
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown
+    ]);
     super.initState();
   }
 
@@ -40,8 +44,8 @@ class _MyAppState extends State<MyApp> {
           children: <Widget>[
            PlayerWithControls(
               aspectRatio: 16 / 9,
-              title: "rtsp vid",
-              url: "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov",
+              title: "RTSP Video Streaming",
+              url: "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov",
             ),
             Expanded(
               child: image == null
@@ -50,6 +54,11 @@ class _MyAppState extends State<MyApp> {
                 decoration: BoxDecoration(image: DecorationImage(image: MemoryImage(image))),
               ),
             ),
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 10),
+              child: Text("Hello"), 
+              opacity: 1.0,
+            )
           ],
         ),
       ),
@@ -58,9 +67,7 @@ class _MyAppState extends State<MyApp> {
 
   void _createCameraImage() async {
     Uint8List file = await _videoViewController.makeSnapshot();
-    setState(() {
-      image = file;
-    });
+    setState(() => image = file);
   }
 }
 
@@ -75,7 +82,7 @@ class FirstRoute extends StatelessWidget {
               context,
               MaterialPageRoute(builder: (context) => CPlayer(
                 title: "rtsp vid",
-                  url: "rtsp://admin:admin@192.168.100.78:554/mode=real&idc=1&ids=1"
+                url: "rtsp://admin:admin@192.168.100.67:554/mode=real&idc=1&ids=1"
               )),
             );
           },

@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_vlc_player/vlc_player.dart';
 import 'package:flutter_vlc_player/cplayer.dart';
 
 class PlayerControls extends StatefulWidget {
   VlcPlayerController controller;
-  String url;
-  PlayerControls(this.controller, this.url);
+  String url, title;
+  PlayerControls(this.controller, this.url, {this.title});
   _PlayerControls createState() => _PlayerControls();
 }
 
-class _PlayerControls extends State<PlayerControls> {
+class _PlayerControls extends State<PlayerControls> with WidgetsBindingObserver {
 
   IconData icon, sound;
-  double volume = 1.0;
+  double volume = 0;
 
   @override
   Widget build(BuildContext context) => _buildBottomBar() ?? Container();
@@ -23,6 +23,21 @@ class _PlayerControls extends State<PlayerControls> {
     icon = Icons.pause;
     sound = Icons.volume_up;
     super.initState();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch(state) {
+      case AppLifecycleState.inactive:
+        break;
+      case AppLifecycleState.paused:
+        break;
+      case AppLifecycleState.suspending:
+        break;
+      case AppLifecycleState.resumed:
+        print("Application resumed");
+        break;
+    }
   }
 
   _buildBottomBar() => Container(
@@ -56,9 +71,11 @@ class _PlayerControls extends State<PlayerControls> {
   _buildIcon() => widget.controller.sPlaying == true ? icon = Icons.pause : icon = Icons.play_arrow;
 
   _buildPlayPause() {
-    print("Playing : ${widget.controller.sPlaying}");
     return IconButton(
-      onPressed: _playPause,
+      onPressed: () {
+        if(widget.controller.initialized) _playPause();
+        else print("Can't control");
+      },
       icon: Icon(icon, color: Colors.blueAccent,),
       color: Colors.blueAccent,
     );
@@ -68,11 +85,12 @@ class _PlayerControls extends State<PlayerControls> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Icon(Icons.volume_up, color: Colors.blueAccent, size: 18,),
+        Icon(widget.controller.initialized ? Icons.volume_up : Icons.volume_off, color: Colors.blueAccent, size: 18,),
         Container(
           width: 100,
           child: Slider(
             onChanged: (value) => setState(() {
+              sound = Icons.volume_up;
               volume = value;
               widget.controller.soundController(value);
             }),
@@ -92,11 +110,14 @@ class _PlayerControls extends State<PlayerControls> {
   );
 
   _fullscreen() {
-    final result = Navigator.push(context, MaterialPageRoute(builder: (context) => CPlayer(
+    widget.controller.setFullScreen(true);
+    Navigator.push(context, MaterialPageRoute(builder: (context) => CPlayer(
       url: widget.url ?? "",
-      title: "CCTV Streaming",
+      title: widget.title ?? "CCTV Streaming",
     )));
-    if(result != null) print("Result from cplayer : $result");
-    if(widget.controller != null && widget.controller.sPlaying) widget.controller.pause();
+    if(widget.controller != null && widget.controller.sPlaying) {
+      widget.controller.pause();
+      _buildIcon();
+    }
   }
 }

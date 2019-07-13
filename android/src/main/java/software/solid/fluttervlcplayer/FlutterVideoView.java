@@ -40,6 +40,7 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
     private TextureView textureView;
     private IVLCVout vout;
     private boolean playerDisposed;
+    private String url;
 
     public FlutterVideoView(Context context, PluginRegistry.Registrar _registrar, BinaryMessenger messenger, int id) {
         this.playerDisposed = false;
@@ -131,29 +132,8 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
     public void onMethodCall(MethodCall methodCall, MethodChannel.Result result) {
         switch (methodCall.method) {
             case "initialize":
-                if (textureView == null) textureView = new TextureView(context);
-                String initStreamURL = methodCall.argument("url");
-
-                ArrayList<String> options = new ArrayList<>();
-                options.add("--no-drop-late-frames");
-                options.add("--no-skip-frames");
-                options.add("--rtsp-tcp");
-
-                if(DISABLE_LOG_OUTPUT) options.add("--quiet");
-
-                libVLC = new LibVLC(context, options);
-                Media media = new Media(libVLC, Uri.parse(Uri.decode(initStreamURL)));
-                mediaPlayer = new MediaPlayer(libVLC);
-                mediaPlayer.setVideoTrackEnabled(true);
-                vout = mediaPlayer.getVLCVout();
-                textureView.forceLayout();
-                textureView.setFitsSystemWindows(true);
-                vout.setVideoSurface(new Surface(textureView.getSurfaceTexture()), null);
-                vout.attachViews();
-
-                mediaPlayer.setEventListener(this);
-                mediaPlayer.setMedia(media);
-                mediaPlayer.play();
+                url = methodCall.argument("url");
+                initialize(url);
                 result.success(null);
                 break;
             case "dispose":
@@ -225,7 +205,37 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
                 else return;
                 result.success(null);
                 break;
+            case "muteSound":
+                Log.e("VolumeMuted", "Volume Muted");
+                mediaPlayer.setVolume(0);
+                break;
         }
+    }
+
+    private void initialize(String url) {
+        if(textureView == null) textureView = new TextureView(context);
+        if(textureView != null) Log.e("TextureView", "TextureView is not null");
+        ArrayList<String> options = new ArrayList<>();
+        options.add("--no-drop-late-frames");
+        options.add("--no-skip-frames");
+        options.add("--rtsp-tcp");
+
+        if(DISABLE_LOG_OUTPUT) options.add("--quiet");
+
+        libVLC = new LibVLC(context, options);
+        Media media = new Media(libVLC, Uri.parse(Uri.decode(url)));
+        mediaPlayer = new MediaPlayer(libVLC);
+        mediaPlayer.setVideoTrackEnabled(true);
+        vout = mediaPlayer.getVLCVout();
+        textureView.forceLayout();
+        textureView.setFitsSystemWindows(true);
+        vout.setVideoSurface(new Surface(textureView.getSurfaceTexture()), null);
+        vout.attachViews();
+
+        mediaPlayer.setEventListener(this);
+        mediaPlayer.setMedia(media);
+        mediaPlayer.play();
+        mediaPlayer.setVolume(100);
     }
 
     @Override
@@ -235,11 +245,11 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
         switch (event.type) {
             case MediaPlayer.Event.Playing:
                 // Insert buffering=false event first:
+                eventObject.clear();
                 eventObject.put("name", "buffering");
                 eventObject.put("value", false);
                 eventSink.success(eventObject.clone());
-                eventObject.clear();
-
+                Log.e("EventPlaying", "Event playing -> Buffering : false");
                 // Now send playing info:
                 int height = 0;
                 int width = 0;
@@ -261,7 +271,9 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
 
             case MediaPlayer.Event.EndReached:
                 Log.e("EndReached", "Endreached on playing streaming");
-                mediaPlayer.stop();
+                Log.e("URLStream", "URI : " + url);
+                mediaPlayer.play();
+                // if(url != "") initialize(url);
                 eventObject.put("name", "ended");
                 eventSink.success(eventObject);
 
@@ -271,11 +283,12 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
                 eventSink.success(eventObject);
 
             case MediaPlayer.Event.Buffering:
+                eventObject.clear();
                 eventObject.put("name", "buffering");
                 eventObject.put("value", true);
                 eventSink.success(eventObject);
+                Log.e("EventBuffering", "Event buffering -> Buffering : true");
 
-                eventObject.clear();
                 eventObject.put("name", "playing");
                 eventObject.put("value", false);
                 eventSink.success(eventObject);
@@ -293,6 +306,13 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
                 break;
 
             case MediaPlayer.Event.Paused:
+                Log.e("EventPause", "Event pause -> Buffering : false");
+                eventObject.clear();
+                eventObject.put("pause", true);
+                eventObject.put("name", "buffering");
+                eventObject.put("value", false);
+                eventSink.success(eventObject);
+                break;
             case MediaPlayer.Event.Stopped:
                 eventObject.put("name", "buffering");
                 eventObject.put("value", false);
@@ -309,6 +329,7 @@ class FlutterVideoView implements PlatformView, MethodChannel.MethodCallHandler,
                 Log.e("Error", "Error on playing streaming");
                 eventObject.put("name", "buffering");
                 eventObject.put("value", true);
+                eventObject.put("error", true);
                 eventSink.success(eventObject);
 
                 eventObject.clear();
