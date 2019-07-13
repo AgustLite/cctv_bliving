@@ -51,6 +51,7 @@ class CPlayerState extends State<CPlayer> {
 
   //bool _isBuffering = false;
   bool _isControlsVisible = true;
+  bool _player = true;
   int _aspectRatio = 0;
   int lastValidPosition;
   double opacity = 1.0;
@@ -88,7 +89,9 @@ class CPlayerState extends State<CPlayer> {
         setState((){});
 
         Timer(Duration(seconds: 5), (){
-          _isControlsVisible = false;
+          setState(() {
+            _isControlsVisible = false;
+          });
         });
 
         bool connectivityCheckInactive = true;
@@ -227,131 +230,128 @@ class CPlayerState extends State<CPlayer> {
               ),
 
               // Controls Layer
-              new IgnorePointer(
-                ignoring: !_isControlsVisible,
-                child: new AnimatedOpacity(
-                    opacity: _isControlsVisible ? 1.0 : 0.0,
-                    duration: new Duration(seconds: 1),
-                    child: Stack(
-                      children: <Widget>[
-                        // Top Bar
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            Container(
+              new AnimatedOpacity(
+                  opacity: _isControlsVisible ? 1.0 : 0.0,
+                  duration: new Duration(seconds: 1),
+                  child: Stack(
+                    children: <Widget>[
+                      // Top Bar
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          Container(
                               height: 72,
-                                child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 10.0,
-                                        vertical: 3.0
-                                    ),
-                                    child: Builder(builder: (BuildContext ctx){
-                                      if(MediaQuery.of(ctx).size.width < 500) return Container();
-                                      return Row(
-                                        mainAxisSize: MainAxisSize.max,
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: <Widget>[
-                                          Row(
-                                            children: <Widget>[
-                                              Container(
-                                                  margin: EdgeInsets.symmetric(horizontal: 10),
-                                                  child: new Material(
-                                                      color: Colors.transparent,
-                                                      borderRadius: BorderRadius.circular(100),
-                                                      child: new InkWell(
-                                                          borderRadius: BorderRadius.circular(100),
-                                                          onTap: () => _back(),
-                                                          child: new Padding(
-                                                            child: new Container(
-                                                                width: 28,
-                                                                height: 28,
-                                                                child: new Icon(
-                                                                    Icons.arrow_back,
-                                                                    size: 28,
-                                                                    color: Colors.white
-                                                                )
-                                                            ),
-                                                            padding: EdgeInsets.all(10),
-                                                          )
-                                                      )
-                                                  )
-                                              ),
-
-                                              // Title
-                                              new Padding(
-                                                padding: EdgeInsets.all(20),
-                                                child: Text(
-                                                  widget.title,
-                                                  style: TextStyle(
-                                                      fontFamily: 'GlacialIndifference',
-                                                      fontSize: 24,
-                                                      color: Colors.white,
-                                                  ),
-                                                ),
-                                              )
-                                            ],
-                                          ),
-                                        ],
-                                      );
-                                    })
-                                )
-                            )
-                          ],
-                        ),
-
-                        // Center Controls (play/pause)
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            new Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: <Widget>[
-                                _buildPlayPause()
-                              ],
-                            )
-                          ],
-                        ),
-
-                        // Bottom Bar
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: <Widget>[
-                            Container(
-                                height: 52.0,
-                                padding: const EdgeInsets.only(right: 10, left: 10),
-                                child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 10.0,
-                                        vertical: 5.0
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
+                              child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 10.0,
+                                      vertical: 3.0
+                                  ),
+                                  child: Builder(builder: (BuildContext ctx){
+                                    if(MediaQuery.of(ctx).size.width < 500) return Container();
+                                    return Row(
                                       mainAxisSize: MainAxisSize.max,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: <Widget>[
-                                        Icon(Icons.volume_up, size: 18, color: Colors.white,),
-                                        Container(
-                                          width: 100,
-                                          child: Slider(
-                                            onChanged: (value) => setState(() {
-                                              volume = value;
-                                              _controller.soundController(value);
-                                            }),
-                                            min: 0,
-                                            max: 1,
-                                            value: volume,
-                                            activeColor: Colors.white,
-                                          ),
-                                        )
+                                        Row(
+                                          children: <Widget>[
+                                            Container(
+                                                margin: EdgeInsets.symmetric(horizontal: 10),
+                                                child: new Material(
+                                                    color: Colors.transparent,
+                                                    borderRadius: BorderRadius.circular(100),
+                                                    child: new InkWell(
+                                                        borderRadius: BorderRadius.circular(100),
+                                                        onTap: () => _back(),
+                                                        child: new Padding(
+                                                          child: new Container(
+                                                              width: 28,
+                                                              height: 28,
+                                                              child: new Icon(
+                                                                  Icons.arrow_back,
+                                                                  size: 28,
+                                                                  color: Colors.white
+                                                              )
+                                                          ),
+                                                          padding: EdgeInsets.all(10),
+                                                        )
+                                                    )
+                                                )
+                                            ),
+
+                                            // Title
+                                            new Padding(
+                                              padding: EdgeInsets.all(20),
+                                              child: Text(
+                                                widget.title,
+                                                style: TextStyle(
+                                                  fontFamily: 'GlacialIndifference',
+                                                  fontSize: 24,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            )
+                                          ],
+                                        ),
                                       ],
-                                    )
-                                )
-                            )
-                          ],
-                        ),
-                      ],
-                    )
-                ),
+                                    );
+                                  })
+                              )
+                          )
+                        ],
+                      ),
+
+                      // Center Controls (play/pause)
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          new Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: <Widget>[
+                              _buildPlayPause()
+                            ],
+                          )
+                        ],
+                      ),
+
+                      // Bottom Bar
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: <Widget>[
+                          Container(
+                              height: 52.0,
+                              padding: const EdgeInsets.only(right: 10, left: 10),
+                              child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 10.0,
+                                      vertical: 5.0
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: <Widget>[
+                                      Icon(Icons.volume_up, size: 18, color: Colors.white,),
+                                      Container(
+                                        width: 100,
+                                        child: Slider(
+                                          onChanged: (value) => setState(() {
+                                            volume = value;
+                                            _controller.soundController(value);
+                                          }),
+                                          min: 0,
+                                          max: 1,
+                                          value: volume,
+                                          activeColor: Colors.white,
+                                        ),
+                                      )
+                                    ],
+                                  )
+                              )
+                          )
+                        ],
+                      ),
+                    ],
+                  )
               ),
 
               // Center Panel
@@ -391,15 +391,20 @@ class CPlayerState extends State<CPlayer> {
           borderRadius: BorderRadius.circular(100),
           onTap: () {
             setState((){
-              if(_controller.sPlaying) _controller.pause();
-              else _controller.play();
+              if(_player) {
+                _player = false;
+                _controller.pause();
+              }else{
+                _player = true;
+                _controller.play();
+              }
             });
           },
           child: new Padding(
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: new Icon(
-                (_controller != null && _controller.sPlaying ?
+                (_player == true ?
                   Icons.pause :
                   Icons.play_arrow
                 ),
