@@ -53,6 +53,7 @@ UIView *_view;
 
 @implementation FlutterVlcPlayerPlugin
 VLCMediaPlayer *_player;
+VLCAudio *_audio;
 FlutterResult _result;
 UIView *_view;
 
@@ -82,6 +83,22 @@ UIView *_view;
 
     } else if ([_methodName isEqualToString:@"dispose"]){
         [_player stop];
+
+
+    } else if ([_methodName isEqualToString:@"soundController"]){
+        NSString *_volum = call.arguments[@"volume"];
+        NSLog(@"volume 1 : %@",_volum);
+        double _vol = [_volum doubleValue];
+        NSLog(@"volume 2: %f",_vol);
+        _vol = _vol *100;
+        NSLog(@"volume 3 : %f",_vol);
+
+        _audio = [_player audio];
+        [_audio setVolume:_vol];
+
+    }else if ([_methodName isEqualToString:@"muteSound"]){
+        _audio = [_player audio];
+        [_audio setVolume:0];
 
     } else if ([_methodName isEqualToString:@"setPlaybackState"]){
 

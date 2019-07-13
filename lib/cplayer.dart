@@ -76,82 +76,84 @@ class CPlayerState extends State<CPlayer> {
       }
 
       setState(() {});
-      
+
       if(_controller.initialized)  lastValidPosition = 0;
 //        lastValidPosition = _controller.currentTime;
     };
 
     _controller = VlcPlayerController(
-      onInit: (){
-        // VIDEO PLAYER: Ensure the first frame is shown after the video is
-        // initialized, even before the play button has been pressed.
-        //if(!this.mounted) return;
-        setState((){});
+        onInit: (){
+          // VIDEO PLAYER: Ensure the first frame is shown after the video is
+          // initialized, even before the play button has been pressed.
+          //if(!this.mounted) return;
+          setState((){});
+          print("control visible before 5s: $_isControlsVisible");
+          Timer(Duration(seconds: 5), (){
+            setState(() {
+              _isControlsVisible = false;
+              print("control visible setelah 5s: $_isControlsVisible");
+              _orientationHandler("landscape");
 
-        Timer(Duration(seconds: 5), (){
-          setState(() {
-            _isControlsVisible = false;
+            });
           });
-        });
 
-        bool connectivityCheckInactive = true;
-        VoidCallback handleOfflinePlayback;
-        handleOfflinePlayback = (){
-          if(!_controller.initialized) {
-            // UNABLE TO CONNECT TO THE INTERNET (show error)
-            _interruptWidget = ErrorInterruptMixin(
-                icon: Icons.offline_bolt,
-                title: "You're offline...",
-                message: "Failed to connect to the internet. Please check your connection."
-            );
+          bool connectivityCheckInactive = true;
+          VoidCallback handleOfflinePlayback;
+          handleOfflinePlayback = (){
+            if(!_controller.initialized) {
+              // UNABLE TO CONNECT TO THE INTERNET (show error)
+              _interruptWidget = ErrorInterruptMixin(
+                  icon: Icons.offline_bolt,
+                  title: "You're offline...",
+                  message: "Failed to connect to the internet. Please check your connection."
+              );
 
+              _controller.removeListener(handleOfflinePlayback);
+            }
+          };
+
+          // Activate network connectivity subscription.
+          networkSubscription = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) async {
             _controller.removeListener(handleOfflinePlayback);
-          }
-        };
 
-        // Activate network connectivity subscription.
-        networkSubscription = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) async {
-          _controller.removeListener(handleOfflinePlayback);
+            if(connectivityCheckInactive){
+              connectivityCheckInactive = false;
+              return;
+            }
 
-          if(connectivityCheckInactive){
-            connectivityCheckInactive = false;
-            return;
-          }
+            print("Detected connection change.");
 
-          print("Detected connection change.");
+            http.Response connectivityCheck;
+            try {
+              connectivityCheck =
+              await http.head("https://static.apollotv.xyz/generate_204");
+            }catch(ex) { connectivityCheck = null; }
 
-          http.Response connectivityCheck;
-          try {
-            connectivityCheck =
-            await http.head("https://static.apollotv.xyz/generate_204");
-          }catch(ex) { connectivityCheck = null; }
+            if(connectivityCheck != null && connectivityCheck.statusCode == 204){
+              // ABLE TO CONNECT TO THE INTERNET (re-initialize the player)
+              print("Re-initializing player to position $lastValidPosition...");
+              int resumePosition = lastValidPosition;
 
-          if(connectivityCheck != null && connectivityCheck.statusCode == 204){
-            // ABLE TO CONNECT TO THE INTERNET (re-initialize the player)
-            print("Re-initializing player to position $lastValidPosition...");
-            int resumePosition = lastValidPosition;
-
-            if(!_controller.initialized) await _controller.setStreamUrl(widget.url);
-            await _controller.play();
-            await _controller.seek(resumePosition);
-            //_isBuffering = false;
-            _interruptWidget = null;
-            setState(() {});
-          }else{
-            _controller.addListener(handleOfflinePlayback);
-          }
-        });
-
-        //_total = _controller.value.duration.inMilliseconds;
-      }
+              if(!_controller.initialized) await _controller.setStreamUrl(widget.url);
+              await _controller.play();
+              await _controller.seek(resumePosition);
+              //_isBuffering = false;
+              _interruptWidget = null;
+              setState(() {});
+            }else{
+              _controller.addListener(handleOfflinePlayback);
+            }
+          });
+          //_total = _controller.value.duration.inMilliseconds;
+        }
     )..addListener(_controllerListener);
-    _controller.soundController(volume);
+//    _controller.soundController(volume);
     super.initState();
   }
 
   Future<void> _beginInitState() async {
     // Disable screen rotation and UI
-    _orientationHandler("landscape");
+
     await SystemChrome.setEnabledSystemUIOverlays([]);
     // Activate wake-lock
     await Screen.keepOn(true);
@@ -191,7 +193,7 @@ class CPlayerState extends State<CPlayer> {
         child: Center(
           child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(
-              Theme.of(context).primaryColor
+                Theme.of(context).primaryColor
             ),
           ),
         ),
@@ -201,181 +203,191 @@ class CPlayerState extends State<CPlayer> {
     return WillPopScope(
       onWillPop: () { return; },
       child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Stack(
-            alignment: Alignment.center,
-            children: <Widget>[
-              // Player
-              GestureDetector(
-                onTap: (){
-                  setState(() {
-                    _isControlsVisible = !_isControlsVisible;
-                  });
-                },
-                child: LayoutBuilder(builder: (_, BoxConstraints constraints) {
-                  return Container(
-                    color: Colors.black,
-                    height: constraints.maxHeight,
-                    width: constraints.maxWidth,
-                    child: Center(
-                      child: VlcPlayer(
-                        url: widget.url,
-                        controller: _controller,
-                        aspectRatio: 16 / 9,//buildAspectRatio(_aspectRatio, context, _controller),
-                        placeholder: Container(),
-                      )
-                    ),
-                  );
-                })
-              ),
-
-              // Controls Layer
-              new AnimatedOpacity(
-                  opacity: _isControlsVisible ? 1.0 : 0.0,
-                  duration: new Duration(seconds: 1),
-                  child: Stack(
-                    children: <Widget>[
-                      // Top Bar
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          Container(
-                              height: 72,
-                              child: Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 10.0,
-                                      vertical: 3.0
-                                  ),
-                                  child: Builder(builder: (BuildContext ctx){
-                                    if(MediaQuery.of(ctx).size.width < 500) return Container();
-                                    return Row(
-                                      mainAxisSize: MainAxisSize.max,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        Row(
-                                          children: <Widget>[
-                                            Container(
-                                                margin: EdgeInsets.symmetric(horizontal: 10),
-                                                child: new Material(
-                                                    color: Colors.transparent,
-                                                    borderRadius: BorderRadius.circular(100),
-                                                    child: new InkWell(
-                                                        borderRadius: BorderRadius.circular(100),
-                                                        onTap: () => _back(),
-                                                        child: new Padding(
-                                                          child: new Container(
-                                                              width: 28,
-                                                              height: 28,
-                                                              child: new Icon(
-                                                                  Icons.arrow_back,
-                                                                  size: 28,
-                                                                  color: Colors.white
-                                                              )
-                                                          ),
-                                                          padding: EdgeInsets.all(10),
-                                                        )
-                                                    )
-                                                )
-                                            ),
-
-                                            // Title
-                                            new Padding(
-                                              padding: EdgeInsets.all(20),
-                                              child: Text(
-                                                widget.title,
-                                                style: TextStyle(
-                                                  fontFamily: 'GlacialIndifference',
-                                                  fontSize: 24,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                      ],
-                                    );
-                                  })
-                              )
-                          )
-                        ],
-                      ),
-
-                      // Center Controls (play/pause)
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          new Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: <Widget>[
-                              _buildPlayPause()
-                            ],
-                          )
-                        ],
-                      ),
-
-                      // Bottom Bar
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          Container(
-                              height: 52.0,
-                              padding: const EdgeInsets.only(right: 10, left: 10),
-                              child: Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 10.0,
-                                      vertical: 5.0
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: <Widget>[
-                                      Icon(Icons.volume_up, size: 18, color: Colors.white,),
-                                      Container(
-                                        width: 100,
-                                        child: Slider(
-                                          onChanged: (value) => setState(() {
-                                            volume = value;
-                                            _controller.soundController(value);
-                                          }),
-                                          min: 0,
-                                          max: 1,
-                                          value: volume,
-                                          activeColor: Colors.white,
-                                        ),
-                                      )
-                                    ],
-                                  )
-                              )
-                          )
-                        ],
-                      ),
-                    ],
-                  )
-              ),
-
-              // Center Panel
-              Center(
-                child: (_getCenterPanel())
-              ),
-
-              // Buffering loader
-              IgnorePointer(
-                child: AnimatedOpacity(
-                  opacity: _controller.buffering && _controller == null ? 1.0 : 0.0,
-                  duration: Duration(milliseconds: 20),
-                  child: LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints){
-                    return Container(child: Center(
-                        child: CircularProgressIndicator(
-                          valueColor: new AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor)
-                        )
-                      ), width: constraints.maxWidth, height: constraints.maxHeight
-                    );
-                  })
+          backgroundColor: Colors.black,
+          body: Stack(
+              alignment: Alignment.center,
+              children: <Widget>[
+                // Player
+                GestureDetector(
+                    onTap: (){
+                      print("is control visible : $_isControlsVisible");
+                      setState(() {
+                        _isControlsVisible = !_isControlsVisible;
+                        print("is control visible : $_isControlsVisible");
+                      });
+                    },
+                    child: LayoutBuilder(builder: (_, BoxConstraints constraints) {
+                      return Container(
+                        color: Colors.black,
+                        height: constraints.maxHeight,
+                        width: constraints.maxWidth,
+                        child: Center(
+                            child: VlcPlayer(
+                              url: widget.url,
+                              controller: _controller,
+                              aspectRatio: 16 / 9,//buildAspectRatio(_aspectRatio, context, _controller),
+                              placeholder: Container(),
+                            )
+                        ),
+                      );
+                    })
                 ),
-              )
-            ]
-        )
+
+                // Controls Layer
+                new AnimatedOpacity(
+                    opacity: _isControlsVisible ? 1.0 : 0.0,
+//                  opacity:  1.0 ,
+                    duration: new Duration(seconds: 1),
+                    child: Stack(
+                      children: <Widget>[
+                        // Top Bar
+                        GestureDetector(
+                            onTap: (){
+                              print("is control visible bef : $_isControlsVisible");
+                              setState(() {
+                                _isControlsVisible = !_isControlsVisible;
+                                print("is control visible  aft: $_isControlsVisible");
+                              });
+                            },
+                            child:Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                    height: 72,
+                                    child: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 10.0,
+                                            vertical: 3.0
+                                        ),
+                                        child: Builder(builder: (BuildContext ctx){
+                                          if(MediaQuery.of(ctx).size.width < 500) return Container();
+                                          return Row(
+                                            mainAxisSize: MainAxisSize.max,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: <Widget>[
+                                              Row(
+                                                children: <Widget>[
+                                                  Container(
+                                                      margin: EdgeInsets.symmetric(horizontal: 10),
+                                                      child: new Material(
+                                                          color: Colors.transparent,
+                                                          borderRadius: BorderRadius.circular(100),
+                                                          child: new InkWell(
+                                                              borderRadius: BorderRadius.circular(100),
+                                                              onTap: () => _back(),
+                                                              child: new Padding(
+                                                                child: new Container(
+                                                                    width: 28,
+                                                                    height: 28,
+                                                                    child: new Icon(
+                                                                        Icons.arrow_back,
+                                                                        size: 28,
+                                                                        color: Colors.white
+                                                                    )
+                                                                ),
+                                                                padding: EdgeInsets.all(10),
+                                                              )
+                                                          )
+                                                      )
+                                                  ),
+
+                                                  // Title
+                                                  new Padding(
+                                                    padding: EdgeInsets.all(20),
+                                                    child: Text(
+                                                      widget.title,
+                                                      style: TextStyle(
+                                                        fontFamily: 'GlacialIndifference',
+                                                        fontSize: 24,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                            ],
+                                          );
+                                        })
+                                    )
+                                )
+                              ],
+                            )
+                        ),
+
+                        // Center Controls (play/pause)
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            new Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: <Widget>[
+                                _buildPlayPause()
+                              ],
+                            )
+                          ],
+                        ),
+
+                        // Bottom Bar
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: <Widget>[
+                            Container(
+                                height: 52.0,
+                                padding: const EdgeInsets.only(right: 10, left: 10),
+                                child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 10.0,
+                                        vertical: 5.0
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      mainAxisSize: MainAxisSize.max,
+                                      children: <Widget>[
+                                        Icon(Icons.volume_up, size: 18, color: Colors.white,),
+                                        Container(
+                                          width: 100,
+                                          child: Slider(
+                                            onChanged: (value) => setState(() {
+                                              volume = value;
+                                              _controller.soundController(value);
+                                            }),
+                                            min: 0,
+                                            max: 1,
+                                            value: volume,
+                                            activeColor: Colors.white,
+                                          ),
+                                        )
+                                      ],
+                                    )
+                                )
+                            )
+                          ],
+                        ),
+                      ],
+                    )
+                ),
+
+                // Center Panel
+                Center(
+                    child: (_getCenterPanel())
+                ),
+
+                // Buffering loader
+                AnimatedOpacity(
+                    opacity: _controller.buffering && _controller == null ? 1.0 : 0.0,
+                    duration: Duration(milliseconds: 20),
+                    child: LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints){
+                      return Container(child: Center(
+                          child: CircularProgressIndicator(
+                              valueColor: new AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor)
+                          )
+                      ), width: constraints.maxWidth, height: constraints.maxHeight
+                      );
+                    })
+                )
+              ]
+          )
       ),
     );
   }
@@ -383,37 +395,37 @@ class CPlayerState extends State<CPlayer> {
   _buildPlayPause() {
     return (_controller != null && _controller.initialized) ? new Container(
       child: new Material(
-        color: Colors.transparent,
-        clipBehavior: Clip.antiAlias,
-        borderRadius: BorderRadius.circular(100),
-        child: new InkWell(
-          highlightColor: const Color(0x05FFFFFF),
+          color: Colors.transparent,
+          clipBehavior: Clip.antiAlias,
           borderRadius: BorderRadius.circular(100),
-          onTap: () {
-            setState((){
-              if(_player) {
-                _player = false;
-                _controller.pause();
-              }else{
-                _player = true;
-                _controller.play();
-              }
-            });
-          },
-          child: new Padding(
-            padding: EdgeInsets.all(10.0),
-            child: Center(
-              child: new Icon(
-                (_player == true ?
-                  Icons.pause :
-                  Icons.play_arrow
-                ),
-                size: 72.0,
-                color: Colors.white,
+          child: new InkWell(
+              highlightColor: const Color(0x05FFFFFF),
+              borderRadius: BorderRadius.circular(100),
+              onTap: () {
+                setState((){
+                  if(_player) {
+                    _player = false;
+                    _controller.pause();
+                  }else{
+                    _player = true;
+                    _controller.play();
+                  }
+                });
+              },
+              child: new Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: Center(
+                      child: new Icon(
+                        (_player == true ?
+                        Icons.pause :
+                        Icons.play_arrow
+                        ),
+                        size: 72.0,
+                        color: Colors.white,
+                      )
+                  )
               )
-            )
           )
-        )
       ),
     ) : Container(
       child: CircularProgressIndicator(),
